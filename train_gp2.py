@@ -96,4 +96,5 @@ class GPT(nn.Module):
         return model, sd, sd_keys
 
 
-
+model, sd, sd_keys = GPT.from_pretrained('gpt2')
+print(sd_keys)
