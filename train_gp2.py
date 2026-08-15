@@ -101,11 +101,14 @@ class GPT(nn.Module):
         sd_keys_hf = sd_hf.keys()
         # sd_keys_hf = [k for k in sd_keys_hf if not k.endswith('.attn.masked_bias')]
         # sd_keys_hf = [k for k in sd_keys_hf if not k.endswith('.attn.bias')]
-        # transposed = ['attn.c_attn.weight', 'attn.c_proj.weight', 'mlp.c_fc.weight', 'mlp.c_proj.weight']
+        transposed = ['attn.c_attn.weight', 'attn.c_proj.weight', 'mlp.c_fc.weight', 'mlp.c_proj.weight']
 
         for k in sd_keys_hf:
             with torch.no_grad():
-                sd[k].copy_(sd_hf[k])
+                if any(k.endswith(w) for w in transposed):
+                    sd_hf[k] = sd_hf[k].t()
+                else:
+                    sd[k].copy_(sd_hf[k])
 
         return model
 
