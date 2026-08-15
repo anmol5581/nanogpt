@@ -155,4 +155,7 @@ for _ in range(max_length):
         x = torch.cat((x, idx_next), dim=1)
 
 print("Generated text:")
-print(x.size())
+for i in range(num_return_sequences):
+    generated_tokens = x[i].cpu().numpy().tolist()
+    generated_text = tokenizer.decode(generated_tokens)
+    print(f"Sequence {i+1}: {generated_text}")
