@@ -112,6 +112,47 @@ class GPT(nn.Module):
 
         return model
 
+    def forward(self, idx, targets=None):
+        B, T = idx.size()
+        pos = torch.arange(0, T, dtype=torch.long, device=idx.device)
+        tok_emb = self.transformer.wte(idx)  # token embeddings of shape (B, T, n_embd)
+        pos_emb = self.transformer.wpe(pos)  # position embeddings of shape (1, T, n_embd)
+        x = tok_emb + pos_emb
+        for block in self.transformer.h:
+            x = block(x)
+        x = self.transformer.ln_f(x)
+        logits = self.lm_head(x)
+        loss = None
+        if targets is not None:
+            loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1))
+        return logits, loss
+
+
+############ Inferencing the model with a prompt #########
+num_return_sequences = 5
+max_length = 30
 
 model = GPT.from_pretrained('gpt2')
-print('hurray')
+model.eval()
+model.to('cuda')
+
+import tiktoken
+tokenizer = tiktoken.get_encoding("gpt2")
+tokens = tokenizer.encode("Hello, I am a language model")
+tokens = torch.tensor(tokens, dtype=torch.long)
+tokens = tokens.unsqueeze(0).repeat(num_return_sequences, 1)
+x = tokens.to('cuda')
+
+############ Generate text from the model ################
+
+for _ in range(max_length):
+    with torch.no_grad():
+        logits, _ = model(x)
+        logits = logits[:, -1, :]
+        probs = F.softmax(logits, dim=-1)
+        topk_probs, topk_indices = torch.topk(probs, k=50, dim=-1)
+        idx_next = torch.multinomial(topk_probs, num_samples=1)
+        idx = torch.cat((idx, idx_next), dim=1)
+
+print("Generated text:")
+print(idx)
