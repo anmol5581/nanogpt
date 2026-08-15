@@ -87,14 +87,28 @@ class GPT(nn.Module):
         }[model_type]
         config_args['vocab_size'] = 50257
         config_args['block_size'] = 1024
-
         config = GPTConfig(**config_args)
-        model = GPT(config)
 
+        # own model
+        model = GPT(config)
         sd = model.state_dict()
         sd_keys = sd.keys()
-        return model, sd, sd_keys
+        # sd_keys = [k for k in sd_keys if not k.endswith('.attn.bias')]
+
+        # huggingface transformers model
+        model_hf = GPT2LMHeadModel.from_pretrained(model_type)
+        sd_hf = model_hf.state_dict()
+        sd_keys_hf = sd_hf.keys()
+        # sd_keys_hf = [k for k in sd_keys_hf if not k.endswith('.attn.masked_bias')]
+        # sd_keys_hf = [k for k in sd_keys_hf if not k.endswith('.attn.bias')]
+        # transposed = ['attn.c_attn.weight', 'attn.c_proj.weight', 'mlp.c_fc.weight', 'mlp.c_proj.weight']
+
+        for k in sd_keys_hf:
+            with torch.no_grad():
+                sd[k].copy_(sd_hf[k])
+
+        return model
 
 
-model, sd, sd_keys = GPT.from_pretrained('gpt2')
-print(sd_keys)
+model = GPT.from_pretrained('gpt2')
+print('hurray')
