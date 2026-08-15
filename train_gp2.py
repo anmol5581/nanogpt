@@ -155,4 +155,4 @@ for _ in range(max_length):
         x = torch.cat((x, idx_next), dim=1)
 
 print("Generated text:")
-print(x)
+print(x.size())
