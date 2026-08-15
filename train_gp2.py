@@ -152,7 +152,7 @@ for _ in range(max_length):
         probs = F.softmax(logits, dim=-1)
         topk_probs, topk_indices = torch.topk(probs, k=50, dim=-1)
         idx_next = torch.multinomial(topk_probs, num_samples=1)
-        idx = torch.cat((x, idx_next), dim=1)
+        x = torch.cat((x, idx_next), dim=1)
 
 print("Generated text:")
-print(idx)
+print(x)
