@@ -106,7 +106,7 @@ class GPT(nn.Module):
         for k in sd_keys_hf:
             with torch.no_grad():
                 if any(k.endswith(w) for w in transposed):
-                    sd_hf[k] = sd_hf[k].t()
+                    sd[k].copy_(sd_hf[k].t())
                 else:
                     sd[k].copy_(sd_hf[k])
 
